@@ -45,7 +45,7 @@ Demo video
 Play the short demo to see two-directional translation and example UI flows.
 
 <video width="720" controls>
-  <source src="video-demo/ScreenCaptureProject6.mp4" type="video/mp4">
+  <source src="video-demo/demo.mp4" type="video/mp4">
   Your browser does not support the video tag. Download the demo: [video-demo/ScreenCaptureProject6.mp4](video-demo/ScreenCaptureProject6.mp4)
 </video>
 
