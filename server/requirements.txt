@@ -1,0 +1,29 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+numpy==1.26.4
+scipy==1.13.1
+librosa==0.10.2.post1
+soundfile==0.12.1
+webrtcvad==2.0.10
+pydantic==2.9.2
+PyYAML==6.0.2
+
+# ASR (CPU)
+faster-whisper==1.0.3
+ctranslate2==4.5.0
+
+# MT
+transformers==4.43.4
+sentencepiece==0.2.0
+sacremoses==0.1.1
+
+# TTS (Coqui, CPU)
+coqui-tts
+edge-tts
+
+# On Windows CPU, install PyTorch separately with the CPU index URL (see README)
+
+# Additional runtime dependencies used by the web UI / file uploads / templating
+jinja2
+python-multipart
+aiofiles

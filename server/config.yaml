@@ -1,0 +1,49 @@
+# config.yaml - Configuration for IndicTrans2
+asr:
+  model: "large-v3"  # or "large-v3" for better quality
+  device: "cuda"   # or "cuda" if you have GPU
+  compute_type: "int8"
+
+mt:
+  # Use IndicTrans2 for Indic languages, M2M100 as fallback
+  model: "ai4bharat/indictrans2-en-indic-1B"  # or "ai4bharat/indictrans2-indic-en-1B" for reverse
+  # Alternative: "facebook/m2m100_418M" for non-Indic pairs
+  max_new_tokens: 160
+  num_beams: 4              # use beam search
+  early_stopping: true      # only works if num_beams > 1
+  no_repeat_ngram_size: 3   # avoid repetition
+  length_penalty: 1.0  
+  device: null  # auto-detect
+
+tts:
+  backend: "edge"  # Use Edge TTS instead of Coqui
+  model: "edge-tts"
+  out_sr: 24000
+  default_speed: 1.0
+  device: "cuda"
+  # Enhanced settings for long paragraph handling - More aggressive for stability
+  max_chunk_length: 200  # Reduced from 800 - smaller chunks for better reliability
+  chunk_overlap: 20      # Reduced overlap
+  synthesis_timeout: 15  # Reduced timeout per chunk - more aggressive
+  max_total_timeout: 60  # Reduced total timeout to 1 minute
+  retry_attempts: 1      # Reduced retries to prevent hanging
+  pause_between_chunks: 0.2  # Shorter pause between chunks
+
+# VAD settings - more conservative for better Nepali speech detection
+vad:
+  sample_rate: 16000
+  frame_ms: 20
+  aggressiveness: 2
+  end_silence_ms: 800  # Increased for natural pauses in Nepali
+  pre_speech_frames: 5  # Buffer more pre-speech
+  min_speech_frames: 15  # Require more frames for valid speech
+
+# Performance and logging
+performance:
+  max_concurrent_sessions: 5  # Reduced for heavy IndicTrans2 model
+  model_timeout_seconds: 60   # Increased for IndicTrans2
+  enable_audio_normalization: true
+
+logging:
+  level: "INFO"
+  log_processing_times: true

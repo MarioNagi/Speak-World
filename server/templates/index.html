@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voice-to-Voice Translation</title>
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#1e293b; --card:#0b1220; --accent:#7c3aed;
+      --accent2:#22d3ee; --text:#e2e8f0; --muted:#94a3b8; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+      --outline:#172036; --hair:#233152;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1d2a57 0%, transparent 60%),
+        radial-gradient(1200px 600px at 110% 10%, #3a1b6b 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh; color:var(--text);
+    }
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:42px;height:42px;border-radius:12px;background:
+      radial-gradient(12px 12px at 30% 25%, var(--accent2), transparent 60%),
+      linear-gradient(135deg, var(--accent), #2e1065);
+      box-shadow:0 6px 22px rgba(124,58,237,.3);
+    }
+    .brand h1{font-size:1.35rem;font-weight:800;letter-spacing:.2px}
+    .brand .subtitle{font-size:.85rem;color:#a5b4fc;opacity:.85;margin-top:2px}
+    .actions{display:flex;gap:10px;align-items:center}
+    .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:700;color:white;background:#334155;cursor:pointer;transition:transform .06s ease,opacity .15s ease,box-shadow .15s ease}
+    .btn:hover{opacity:.96;transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg, var(--accent), #4c1d95);box-shadow:0 6px 20px rgba(124,58,237,.25)}
+    .btn-good{background:linear-gradient(135deg, #16a34a, #065f46);box-shadow:0 6px 20px rgba(22,163,74,.25)}
+    .btn-outline{background:transparent; border:1px solid #475569;color:#e2e8f0}
+    .grid{display:grid;gap:16px;grid-template-columns:1.2fr 1fr}
+    .panel{
+      background:rgba(255,255,255,0.035);
+      backdrop-filter: blur(8px);
+      border:1px solid var(--outline);
+      border-radius:18px; padding:18px;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 10px 30px rgba(2,6,23,.35);
+    }
+    .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .panel-title{font-weight:800;color:#dbeafe;letter-spacing:.2px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select, .pill{
+      background:#0b1220;border:1px solid #1f2a44;color:var(--text);
+      border-radius:12px;padding:10px 12px;font-size:14px;min-width:180px
+    }
+    .pill{display:flex;align-items:center;gap:8px}
+    .status-dot{width:10px;height:10px;border-radius:50%}
+    .ok{background:var(--good)} .bad{background:var(--bad)} .warn{background:var(--warn)}
+    .mic-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+    .side{
+      background:rgba(255,255,255,0.02);
+      border:1px dashed var(--hair);
+      border-radius:16px;padding:16px;text-align:center;
+      transition:box-shadow .15s ease, transform .06s ease;
+    }
+    .side:hover{box-shadow:0 8px 24px rgba(59,130,246,.18); transform:translateY(-1px)}
+    .side h3{font-size:1rem;color:#cbd5e1;margin-bottom:8px}
+    .mic{
+      width:126px;height:126px;border-radius:64px;border:none;cursor:pointer;margin:12px auto 6px;
+      font-size:44px; color:white;
+      background: radial-gradient(60px 60px at 30% 30%, #8b5cf6, transparent 65%),
+                  linear-gradient(135deg, #6d28d9, #1d4ed8);
+      box-shadow:0 10px 30px rgba(124,58,237,0.28);
+      transition:transform .06s ease, box-shadow .15s ease;
+    }
+    .mic:hover{transform:translateY(-1px); box-shadow:0 14px 38px rgba(124,58,237,.36)}
+    .mic.recording{animation:pulse 1s infinite; background: radial-gradient(60px 60px at 30% 30%, #ef4444, transparent 65%), linear-gradient(135deg, #b91c1c, #dc2626)}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+    .hint{font-size:12px;color:var(--muted)}
+    .pair{font-size:.9rem;color:#a5b4fc;margin-left:6px;opacity:.95}
+    .divider{height:1px;background:linear-gradient(90deg, transparent, #334155, transparent);margin:10px 0}
+    .debug{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      font-size:12px;max-height:220px;overflow:auto;
+      background:#0a0f1a;border:1px solid #13203a;border-radius:12px;padding:10px;color:#a7f3d0;display:none
+    }
+    /* WRAP LONG DEBUG LINES */
+    .debug pre{white-space:pre-wrap; word-break:break-word}
+    .debug.show{display:block}
+    .footer{margin-top:16px;font-size:12px;color:#93c5fd;opacity:0.8;text-align:center}
+    /* compact labels row spacing */
+    .controls{gap:8px}
+    .label{font-size:.8rem;color:#93c5fd;opacity:.9;margin-right:6px}
+    @media(max-width:930px){
+      .grid{grid-template-columns:1fr}
+      .mic-wrap{grid-template-columns:1fr}
+      .actions{flex-wrap:wrap;justify-content:flex-end}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Voice-to-Voice Translation</h1>
+          <div class="subtitle">Real-time dubbing • Local, fast, and private</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="toggleDebugBtn" class="btn btn-outline">Show Debug</button>
+        <button id="startBtn" class="btn btn-primary">Start Session</button>
+        <div id="statusPill" class="pill">
+          <span class="status-dot bad" id="statusDot"></span><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Language Controls <span id="pairLabel" class="pair"></span></div>
+        </div>
+
+        <div class="row controls" style="margin-bottom:10px">
+          <span class="label">From</span>
+          <select id="lang1"></select>
+          <button id="swapBtn" class="btn" title="Swap languages">⇄ Swap</button>
+          <span class="label">To</span>
+          <select id="lang2"></select>
+          <button id="applyLangsBtn" class="btn btn-good">Apply Languages</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="mic-wrap" id="interface" style="display:none">
+          <div class="side">
+            <h3 id="lang1Display">Language 1</h3>
+            <button class="mic" id="micBtn1">🎤</button>
+            <div class="hint">Hold to speak</div>
+          </div>
+          <div class="side">
+            <h3 id="lang2Display">Language 2</h3>
+            <button class="mic" id="micBtn2">🎤</button>
+            <div class="hint">Hold to speak</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header" style="margin-bottom:8px">
+          <div class="panel-title">Session Debug</div>
+          <div class="hint">Hidden by default</div>
+        </div>
+        <div class="debug" id="debugPanel"><pre id="debugLog">Initializing…</pre></div>
+      </div>
+    </div>
+
+    <div class="footer">Tip: you can change language pairs anytime with “Apply Languages” — no page refresh needed.</div>
+  </div>
+
+  <script>
+    // ---------- Debug ----------
+    const debugEl = document.getElementById('debugPanel');
+    const debugLogEl = document.getElementById('debugLog');
+    const toggleDebugBtn = document.getElementById('toggleDebugBtn');
+    toggleDebugBtn.onclick = () => {
+      const showing = debugEl.classList.toggle('show');
+      toggleDebugBtn.textContent = showing ? 'Hide Debug' : 'Show Debug';
+    };
+    function debugLog(msg){
+      const now = new Date().toLocaleTimeString();
+      debugLogEl.textContent += `\n[${now}] ${msg}`;
+      debugLogEl.parentElement.scrollTop = debugLogEl.parentElement.scrollHeight;
+      console.log(msg);
+    }
+
+    // ---------- Auth helper (optional) ----------
+    function getAuthToken(){
+      try { return localStorage.getItem('authToken') || null; } catch { return null; }
+    }
+
+    // ---------- State ----------
+    let ws=null, sessionId=null, isConnected=false;
+    let languages=[];
+    let audioContext=null, mediaStream=null, processorNode=null;
+    let isRecording=false, recordingDirection=null;
+
+    // 20ms @16kHz
+    const FRAME_SAMPLES=320;
+    let pendingFloat16k=new Float32Array(0);
+
+    // ---------- UI ----------
+    const startBtn=document.getElementById('startBtn');
+    const statusDot=document.getElementById('statusDot');
+    const statusText=document.getElementById('statusText');
+    const interfaceWrap=document.getElementById('interface');
+    const lang1Sel=document.getElementById('lang1');
+    const lang2Sel=document.getElementById('lang2');
+    const lang1Display=document.getElementById('lang1Display');
+    const lang2Display=document.getElementById('lang2Display');
+    const pairLabel=document.getElementById('pairLabel');
+
+    function setStatus(ok){
+      statusDot.className = 'status-dot ' + (ok ? 'ok':'bad');
+      statusText.textContent = ok ? 'Connected' : 'Disconnected';
+    }
+    function updateNames(){
+      const l1 = languages.find(l=>l.key===lang1Sel.value)?.display || lang1Sel.value;
+      const l2 = languages.find(l=>l.key===lang2Sel.value)?.display || lang2Sel.value;
+      lang1Display.textContent = l1; lang2Display.textContent = l2;
+      if (pairLabel) pairLabel.textContent = `${l1} ↔ ${l2}`;
+    }
+    function showInterface(show){
+      interfaceWrap.style.display = show ? 'grid' : 'none';
+      startBtn.style.display = show ? 'none' : 'inline-block';
+      setStatus(show);
+    }
+
+    // ---------- Init ----------
+    document.addEventListener('DOMContentLoaded', ()=>{
+      debugLog('Page loaded');
+      document.getElementById('swapBtn').onclick = () => {
+        const t = lang1Sel.value; lang1Sel.value = lang2Sel.value; lang2Sel.value = t; updateNames();
+        debugLog(`Swapped: ${lang1Sel.value} <-> ${lang2Sel.value}`);
+      };
+      document.getElementById('applyLangsBtn').onclick = applyLanguages;
+      document.getElementById('micBtn1').onmousedown = ()=>startRecording('lang1_to_lang2');
+      document.getElementById('micBtn1').onmouseup   = ()=>stopRecording('lang1_to_lang2');
+      document.getElementById('micBtn2').onmousedown = ()=>startRecording('lang2_to_lang1');
+      document.getElementById('micBtn2').onmouseup   = ()=>stopRecording('lang2_to_lang1');
+      // Touch
+      document.getElementById('micBtn1').ontouchstart = (e)=>{e.preventDefault();startRecording('lang1_to_lang2')};
+      document.getElementById('micBtn1').ontouchend   = (e)=>{e.preventDefault();stopRecording('lang1_to_lang2')};
+      document.getElementById('micBtn2').ontouchstart = (e)=>{e.preventDefault();startRecording('lang2_to_lang1')};
+      document.getElementById('micBtn2').ontouchend   = (e)=>{e.preventDefault();stopRecording('lang2_to_lang1')};
+      startBtn.onclick = createSession;
+
+      // NEW: reflect label as you change dropdowns (visual only)
+      lang1Sel.addEventListener('change', updateNames);
+      lang2Sel.addEventListener('change', updateNames);
+
+      loadLanguages();
+    });
+
+    async function loadLanguages(){
+      try{
+        const res = await fetch('/languages/supported');
+        languages = await res.json();
+        lang1Sel.innerHTML = languages.map(l=>`<option value="${l.key}">${l.display}</option>`).join('');
+        lang2Sel.innerHTML = languages.map(l=>`<option value="${l.key}">${l.display}</option>`).join('');
+        lang1Sel.value='english'; lang2Sel.value='nepali'; updateNames();
+        debugLog(`Loaded ${languages.length} languages`);
+      }catch(e){ debugLog(`Failed to load languages: ${e.message}`); }
+    }
+
+    // ---------- Session lifecycle ----------
+    async function createSession(){
+      try{
+        startBtn.disabled=true; startBtn.textContent='Creating…';
+        const body = { lang1: lang1Sel.value, lang2: lang2Sel.value };
+        const headers = { 'Content-Type':'application/json' };
+        const token = getAuthToken(); if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch('/session/create',{method:'POST',headers,body:JSON.stringify(body)});
+        const data = await res.json();
+        if (!data.session) throw new Error(data.error || 'Session creation failed');
+        sessionId = data.session.session_id;
+        debugLog(`Session created: ${sessionId}`);
+        connectWebSocket();
+      }catch(e){
+        debugLog(`Session error: ${e.message}`);
+        startBtn.disabled=false; startBtn.textContent='Start Session';
+      }
+    }
+
+    function connectWebSocket(){
+      const proto = location.protocol==='https:'?'wss:':'ws:';
+      const token = getAuthToken();
+      const url = `${proto}//${location.host}/ws/translate/${sessionId}` + (token?`?token=${encodeURIComponent(token)}`:'');
+      debugLog(`WS: ${url}`);
+      ws = new WebSocket(url);
+      ws.binaryType='arraybuffer';
+
+      ws.onopen = ()=>{ debugLog('WS connected'); isConnected=true; showInterface(true); setupAudio(); };
+      ws.onclose= (ev)=>{ debugLog(`WS closed ${ev.code} ${ev.reason||''}`); isConnected=false; showInterface(false); };
+      ws.onerror= (err)=>{ debugLog(`WS error ${err.message||err}`); };
+      ws.onmessage=(ev)=>{
+        if (typeof ev.data==='string'){
+          try{ handleMessage(JSON.parse(ev.data)); }catch{ debugLog(`WS text: ${ev.data}`); }
+        } else if (ev.data instanceof ArrayBuffer){ playAudio(ev.data); }
+      };
+    }
+
+    function handleMessage(m){
+      if (m.type==='ready') return;
+      if (m.type==='heartbeat') return;
+      if (m.type==='translation_result') debugLog(`[ASR] ${m.asr_text} | [MT] ${m.translated_text}`);
+      else if (m.type==='asr') debugLog(`[ASR] ${m.text}`);
+      else if (m.type==='mt') debugLog(`[MT ] ${m.text}`);
+      else if (m.type==='error') debugLog(`Server error: ${JSON.stringify(m)}`);
+    }
+
+    async function teardownSession(){
+      try{
+        if (ws){ try{ ws.close(); }catch{} ws=null; }
+        if (processorNode){ try{ processorNode.disconnect(); }catch{} processorNode=null; }
+        if (audioContext && audioContext.state!=='closed'){ try{ await audioContext.close(); }catch{} }
+        if (mediaStream){ try{ mediaStream.getTracks().forEach(t=>t.stop()); }catch{} }
+        audioContext=null; mediaStream=null; pendingFloat16k=new Float32Array(0);
+      }catch{}
+    }
+
+    async function applyLanguages(){
+      debugLog(`Applying languages: ${lang1Sel.value} -> ${lang2Sel.value}`);
+      await teardownSession();
+      showInterface(false);
+      startBtn.disabled=false; startBtn.textContent='Start Session';
+      await createSession();
+    }
+
+    // ---------- Audio I/O ----------
+    async function setupAudio(){
+      try{
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio:{
+          channelCount:1, echoCancellation:false, noiseSuppression:false, autoGainControl:false
+        }});
+        audioContext = new (window.AudioContext||window.webkitAudioContext)();
+        const src = audioContext.createMediaStreamSource(mediaStream);
+        processorNode = audioContext.createScriptProcessor(4096,1,1);
+        processorNode.onaudioprocess = (e)=>{
+          if (!isRecording || !ws || ws.readyState!==WebSocket.OPEN) return;
+          try{
+            const input = e.inputBuffer.getChannelData(0);
+            const sr = audioContext.sampleRate;
+            let float16k;
+            if (sr!==16000){
+              const ratio=sr/16000, outLen=Math.round(input.length/ratio);
+              float16k = new Float32Array(outLen);
+              for (let i=0;i<outLen;i++){
+                const idx=i*ratio, i0=Math.floor(idx), frac=idx-i0;
+                const s0=input[i0]||0, s1=input[i0+1]??s0;
+                float16k[i]=s0+(s1-s0)*frac;
+              }
+            } else float16k=input;
+
+            if (pendingFloat16k.length===0) pendingFloat16k=float16k.slice();
+            else {
+              const tmp=new Float32Array(pendingFloat16k.length+float16k.length);
+              tmp.set(pendingFloat16k,0); tmp.set(float16k,pendingFloat16k.length); pendingFloat16k=tmp;
+            }
+            while (pendingFloat16k.length>=FRAME_SAMPLES){
+              const frame=pendingFloat16k.subarray(0,FRAME_SAMPLES);
+              const buf=new ArrayBuffer(FRAME_SAMPLES*2); const dv=new DataView(buf);
+              for (let i=0;i<FRAME_SAMPLES;i++){
+                let s=Math.max(-1,Math.min(1,frame[i]));
+                const v=s<0?Math.round(s*0x8000):Math.round(s*0x7FFF);
+                dv.setInt16(i*2,v,true);
+              }
+              ws.send(buf);
+              pendingFloat16k=pendingFloat16k.subarray(FRAME_SAMPLES).slice();
+            }
+          }catch(err){ debugLog(`Audio proc error: ${err.message}`); }
+        };
+        src.connect(processorNode); processorNode.connect(audioContext.destination);
+      }catch(e){ debugLog(`Audio init failed: ${e.message}`); }
+    }
+
+    async function startRecording(direction){
+      if (!isConnected || !audioContext){ debugLog('Not connected'); return; }
+      if (audioContext.state==='suspended'){ await audioContext.resume(); }
+      isRecording=true; recordingDirection=direction;
+      document.getElementById(direction==='lang1_to_lang2'?'micBtn1':'micBtn2').classList.add('recording');
+      if (ws?.readyState===WebSocket.OPEN){
+        ws.send(JSON.stringify({type:'translate',direction}));
+      }
+    }
+
+    function stopRecording(direction){
+      if (!isRecording || recordingDirection!==direction) return;
+      isRecording=false; recordingDirection=null;
+      document.getElementById(direction==='lang1_to_lang2'?'micBtn1':'micBtn2').classList.remove('recording');
+      if (ws?.readyState===WebSocket.OPEN){
+        ws.send(JSON.stringify({type:'translate',direction}));
+        ws.send('flush'); // helps servers finalize
+      }
+      pendingFloat16k=new Float32Array(0);
+    }
+
+    async function playAudio(ab){
+      try{
+        if (!audioContext){ audioContext=new (window.AudioContext||window.webkitAudioContext)(); }
+        const s=new Int16Array(ab);
+        const f=new Float32Array(s.length);
+        for (let i=0;i<s.length;i++) f[i]=s[i]/32768;
+        const sr=24000, buf=audioContext.createBuffer(1,f.length,sr);
+        buf.getChannelData(0).set(f);
+        const src=audioContext.createBufferSource(); src.buffer=buf; src.connect(audioContext.destination); src.start();
+      }catch(e){ debugLog(`Playback failed: ${e.message}`); }
+    }
+
+    // ---------- Cleanup ----------
+    window.addEventListener('beforeunload', ()=>teardownSession());
+  </script>
+</body>
+</html>

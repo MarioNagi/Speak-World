@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Video demo outputs
+video-demo/*.wav
+video-demo/*.srt
+
+# Secrets / keys
+*.pem
+*.key
+*.crt
+
+# Editor
+.vscode/
+.idea/
+
+# Docker
+*.pid
+
+# Node
+node_modules/

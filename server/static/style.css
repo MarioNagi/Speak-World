@@ -1,0 +1,42 @@
+/* Additional CSS for enhanced UI styling if needed */
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.audio-wave {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+}
+
+.audio-wave .bar {
+    width: 3px;
+    height: 10px;
+    background: #667eea;
+    margin: 0 1px;
+    border-radius: 2px;
+    animation: wave 1.2s ease-in-out infinite;
+}
+
+.audio-wave .bar:nth-child(2) { animation-delay: 0.1s; }
+.audio-wave .bar:nth-child(3) { animation-delay: 0.2s; }
+.audio-wave .bar:nth-child(4) { animation-delay: 0.3s; }
+.audio-wave .bar:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wave {
+    0%, 100% { height: 10px; }
+    50% { height: 30px; }
+}
