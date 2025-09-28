@@ -45,7 +45,11 @@ Demo video
 Play the short demo to see two-directional translation and example UI flows.
 
  
- [📹 View Demo Video](https://raw.githubusercontent.com/MarioNagi/Speak-World/refs/heads/main/video-demo/demo.mp4) 
+
+
+https://github.com/user-attachments/assets/e8fd0658-dc4b-4a07-ba64-26bc2ac738ff
+
+
  
 
 Quick highlights
