@@ -46,11 +46,9 @@ Play the short demo to see two-directional translation and example UI flows.
 
  
 
+https://github.com/user-attachments/assets/d26c70ee-4635-4a36-8cb5-c548e4f4fa67
 
-https://github.com/user-attachments/assets/e8fd0658-dc4b-4a07-ba64-26bc2ac738ff
 
-
- 
 
 Quick highlights
 - Near Real-time, bidirectional voice translation sessions
